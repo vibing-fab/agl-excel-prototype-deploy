@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prototype variants</title>
+  <style>
+    :root {
+      --bg: #0b0b0b;
+      --card: #141a1f;
+      --border: #2a3238;
+      --text: #f5f7f8;
+      --muted: #9aa3ab;
+      --accent: #0d6b5c;
+      --accent-hover: #0a5549;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem 1.5rem 3rem;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 0.25rem; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin: 0 0 2rem; }
+    .grid { display: flex; flex-direction: column; gap: 0.75rem; }
+    .card {
+      display: block;
+      padding: 1rem 1.25rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .card:hover {
+      border-color: var(--accent);
+      background: #1a2228;
+    }
+    .card-name {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.35rem;
+      font-family: ui-monospace, monospace;
+    }
+    .card-desc { color: var(--muted); font-size: 0.875rem; line-height: 1.45; }
+    .card-url { color: var(--accent); font-size: 0.75rem; margin-top: 0.5rem; word-break: break-all; }
+    .error { color: #e57373; padding: 1rem; background: #2a1515; border-radius: 8px; }
+    .loading { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Prototype variants</h1>
+    <p class="subtitle">Pick a branch deployment to open</p>
+    <div id="root" class="loading">Loading…</div>
+  </div>
+  <script>
+    (async function () {
+      const root = document.getElementById('root');
+      const pathParts = window.location.pathname.replace(/\/$/, '').split('/').filter(Boolean);
+      // e.g. /agl-excel-prototype-deploy/ -> repoName = agl-excel-prototype-deploy
+      const repoName = pathParts[0] || '';
+      const base = repoName ? '/' + repoName + '/' : '/';
+
+      try {
+        const res = await fetch('deployment-config.json');
+        if (!res.ok) throw new Error('Could not load deployment-config.json');
+        const config = await res.json();
+        const branches = config.branches || [];
+
+        if (branches.length === 0) {
+          root.innerHTML = '<p class="error">No branches in deployment-config.json</p>';
+          return;
+        }
+
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+
+        for (const b of branches) {
+          const name = b.name;
+          const href = base + encodeURIComponent(name) + '/';
+          const a = document.createElement('a');
+          a.className = 'card';
+          a.href = href;
+          a.innerHTML =
+            '<div class="card-name">' + escapeHtml(name) + '</div>' +
+            '<div class="card-desc">' + escapeHtml(b.description || '') + '</div>' +
+            '<div class="card-url">' + escapeHtml(window.location.origin + href) + '</div>';
+          grid.appendChild(a);
+        }
+
+        root.replaceChildren(grid);
+      } catch (e) {
+        root.innerHTML = '<p class="error">' + escapeHtml(String(e.message || e)) + '</p>';
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+    })();
+  </script>
+</body>
+</html>

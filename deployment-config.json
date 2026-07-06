@@ -1,0 +1,12 @@
+{
+  "branches": [
+    {
+      "name": "main",
+      "description": "Stable baseline — three Figma directions (Dedicated Card, Intermediate Step, Adaptive Form) with Pennylane DS wiring and Excel backdrop"
+    },
+    {
+      "name": "dedicated-card-family-filter",
+      "description": "Single version with one dedicated card for the AGL and the possibilty to filter by category family"
+    }
+  ]
+}
